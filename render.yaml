@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: envylead-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GNANI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: '["https://envylead.vercel.app","http://localhost:5173"]'
+      - key: DATABASE_URL
+        value: sqlite:///./envylead.db
+    disk:
+      name: envylead-data
+      mountPath: /opt/render/project/src/backend
+      sizeGB: 1

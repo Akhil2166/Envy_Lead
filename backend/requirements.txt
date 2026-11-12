@@ -6,4 +6,4 @@ python-dotenv==1.2.4
 pytest==9.2.0
 httpx==0.28.1
 python-multipart==0.0.32
-gnani-vachana @ file:///C:/Users/akhil/Downloads/gnani-vachana-main/gnani-vachana-main
+gnani-vachana==0.9.0

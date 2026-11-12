@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createLead, deleteLead, getHealth, getStats, listLeads, updateLead } from "../services/api";
+import { BASE, createLead, deleteLead, getHealth, getStats, listLeads, updateLead } from "../services/api";
 
 export default function Dashboard() {
   const [health, setHealth] = useState<any>(null);
@@ -70,7 +70,7 @@ export default function Dashboard() {
               if (!f) return;
               const lang = (e.currentTarget.elements.namedItem("lang") as HTMLSelectElement).value;
               try {
-                const r = await (await fetch("/api/stt/transcribe", { method: "POST", body: (() => { const fd = new FormData(); fd.append("file", f); fd.append("language", lang); return fd; })() })).json();
+                const r = await (await fetch(`${BASE}/stt/transcribe`, { method: "POST", body: (() => { const fd = new FormData(); fd.append("file", f); fd.append("language", lang); return fd; })() })).json();
                 alert("Transcript: " + (r.transcript || ""));
                 if (r.extracted?.name) {
                   await createLead({ name: r.extracted.name || "Unknown", phone: r.extracted.phone, budget: r.extracted.budget, location: r.extracted.location, property_type: r.extracted.property_type, bhk: r.extracted.bhk, intent: r.extracted.intent, notes: r.extracted.notes, transcript: r.transcript, language: lang, source: "voice", status: "new", priority: "medium" });
@@ -94,7 +94,7 @@ export default function Dashboard() {
               const text = (e.currentTarget.elements.namedItem("ttext") as HTMLTextAreaElement).value;
               try {
                 const fd = new FormData(); fd.append("text", text); fd.append("language", "en-IN");
-                const r = await fetch("/api/tts/synthesize", { method: "POST", body: fd });
+                const r = await fetch(`${BASE}/tts/synthesize`, { method: "POST", body: fd });
                 const blob = await r.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a"); a.href = url; a.download = "envylead-tts.wav"; a.click();
