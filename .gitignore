@@ -1,0 +1,21 @@
+# Environment
+.env
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# OpenCode / tooling
+.playwright-mcp/

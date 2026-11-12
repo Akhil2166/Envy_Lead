@@ -1,0 +1,5 @@
+backend/.venv
+backend/tests
+backend/*.db
+docs/screenshots
+.playwright-mcp
