@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.core.database import get_db, row_to_dict
+from app.core.database import get_db, row_to_dict, init_db
 
 router = APIRouter(tags=["leads"])
 
@@ -48,6 +48,7 @@ class LeadUpdate(BaseModel):
 
 @router.get("/leads")
 def list_leads(q: Optional[str] = None, status: Optional[str] = None, intent: Optional[str] = None, limit: int = 100, offset: int = 0):
+    init_db()
     with get_db() as conn:
         sql = "SELECT * FROM leads WHERE 1=1"
         params: list = []
@@ -70,6 +71,7 @@ def list_leads(q: Optional[str] = None, status: Optional[str] = None, intent: Op
 
 @router.get("/leads/stats")
 def stats():
+    init_db()
     with get_db() as conn:
         total = conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0]
         by_status = {r[0]: r[1] for r in conn.execute("SELECT status, COUNT(*) FROM leads GROUP BY status").fetchall()}
@@ -79,6 +81,7 @@ def stats():
 
 @router.get("/leads/{lead_id}")
 def get_lead(lead_id: int):
+    init_db()
     with get_db() as conn:
         row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         if not row:
@@ -88,22 +91,27 @@ def get_lead(lead_id: int):
 
 @router.post("/leads", status_code=201)
 def create_lead(lead: LeadIn):
-    now = datetime.now(timezone.utc).isoformat()
-    with get_db() as conn:
-        cur = conn.execute(
-            """INSERT INTO leads (name,phone,budget,location,property_type,bhk,intent,notes,transcript,language,source,status,priority,summary,next_action,request_id,created_at,updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (lead.name, lead.phone, lead.budget, lead.location, lead.property_type, lead.bhk, lead.intent, lead.notes,
-             lead.transcript, lead.language, lead.source, lead.status, lead.priority, lead.summary, lead.next_action,
-             lead.request_id, now, now),
-        )
-        new_id = cur.lastrowid
-        row = conn.execute("SELECT * FROM leads WHERE id=?", (new_id,)).fetchone()
-        return row_to_dict(row)
+    try:
+        init_db()
+        now = datetime.now(timezone.utc).isoformat()
+        with get_db() as conn:
+            cur = conn.execute(
+                """INSERT INTO leads (name,phone,budget,location,property_type,bhk,intent,notes,transcript,language,source,status,priority,summary,next_action,request_id,created_at,updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (lead.name, lead.phone, lead.budget, lead.location, lead.property_type, lead.bhk, lead.intent, lead.notes,
+                 lead.transcript, lead.language, lead.source, lead.status, lead.priority, lead.summary, lead.next_action,
+                 lead.request_id, now, now),
+            )
+            new_id = cur.lastrowid
+            row = conn.execute("SELECT * FROM leads WHERE id=?", (new_id,)).fetchone()
+            return row_to_dict(row)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/leads/{lead_id}")
 def update_lead(lead_id: int, lead: LeadUpdate):
+    init_db()
     with get_db() as conn:
         existing = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         if not existing:
@@ -120,6 +128,7 @@ def update_lead(lead_id: int, lead: LeadUpdate):
 
 @router.delete("/leads/{lead_id}", status_code=204)
 def delete_lead(lead_id: int):
+    init_db()
     with get_db() as conn:
         existing = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         if not existing:

@@ -19,3 +19,4 @@ Thumbs.db
 
 # OpenCode / tooling
 .playwright-mcp/
+.vercel
